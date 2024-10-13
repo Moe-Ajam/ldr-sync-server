@@ -21,6 +21,7 @@ func main() {
 	}
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("GET /api/err", handlerError)
 
 	fmt.Printf("Listening on port: %s...\n", port)
 	log.Fatal(srv.ListenAndServe())
