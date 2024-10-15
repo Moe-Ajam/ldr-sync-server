@@ -47,3 +47,25 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	)
 	return i, err
 }
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+select id from users where email = $1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getUserByName = `-- name: GetUserByName :one
+select id from users where name = $1
+`
+
+func (q *Queries) GetUserByName(ctx context.Context, name string) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getUserByName, name)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}

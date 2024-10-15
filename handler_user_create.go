@@ -25,12 +25,27 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		fmt.Println(err)
 		respondWithError(w, 500, "something went wrong while creating a user")
+		return
+	}
+
+	id, err := cfg.DB.GetUserByEmail(context.Background(), params.Email)
+	if err == nil {
+		fmt.Printf("email already exists and has the id: %s\n", id)
+		respondWithError(w, http.StatusConflict, "email already exists")
+		return
+	}
+	id, err = cfg.DB.GetUserByName(context.Background(), params.Username)
+	if err == nil {
+		fmt.Printf("name already exists and has the id: %s\n", id)
+		respondWithError(w, http.StatusConflict, "name already exists")
+		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 	if err != nil {
 		fmt.Println(err)
 		respondWithError(w, 500, "something went wrong while creating a user")
+		return
 	}
 
 	user, err := cfg.DB.CreateUser(context.Background(), database.CreateUserParams{
