@@ -13,13 +13,15 @@ import (
 )
 
 type apiConfig struct {
-	DB *database.Queries
+	DB        *database.Queries
+	jwtSecret string
 }
 
 func main() {
 	godotenv.Load()
 	port := os.Getenv("PORT")
 	dbURL := os.Getenv("CONN")
+	secret := os.Getenv("JWT_SECRET")
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -28,7 +30,8 @@ func main() {
 	dbQuries := database.New(db)
 
 	apiCfg := apiConfig{
-		DB: dbQuries,
+		DB:        dbQuries,
+		jwtSecret: secret,
 	}
 
 	mux := http.NewServeMux()
@@ -36,7 +39,8 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("GET /api/err", handlerError)
 
-	mux.HandleFunc("POST /api/users", apiCfg.handlerUserCreate)
+	mux.HandleFunc("POST /api/register", apiCfg.handlerUserCreate)
+	mux.HandleFunc("POST /api/login", apiCfg.handlerUserLogin)
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,

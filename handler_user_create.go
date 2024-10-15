@@ -12,6 +12,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type registerResponse struct {
+	Id        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    string `json:"email"`
@@ -28,15 +35,15 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	id, err := cfg.DB.GetUserByEmail(context.Background(), params.Email)
+	retrievedUser, err := cfg.DB.GetUserByEmail(context.Background(), params.Email)
 	if err == nil {
-		fmt.Printf("email already exists and has the id: %s\n", id)
+		fmt.Printf("email already exists and has the id: %s\n", retrievedUser.ID)
 		respondWithError(w, http.StatusConflict, "email already exists")
 		return
 	}
-	id, err = cfg.DB.GetUserByName(context.Background(), params.Username)
+	retrievedUser, err = cfg.DB.GetUserByName(context.Background(), params.Username)
 	if err == nil {
-		fmt.Printf("name already exists and has the id: %s\n", id)
+		fmt.Printf("name already exists and has the id: %s\n", retrievedUser.ID)
 		respondWithError(w, http.StatusConflict, "name already exists")
 		return
 	}
@@ -57,5 +64,12 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 		Password:  string(hash),
 	})
 
-	respondWithJSON(w, http.StatusCreated, user)
+	response := registerResponse{
+		Id:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+	}
+
+	respondWithJSON(w, http.StatusCreated, response)
 }

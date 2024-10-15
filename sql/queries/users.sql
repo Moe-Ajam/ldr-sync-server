@@ -4,7 +4,7 @@ values ($1, $2, $3, $4, $5, $6)
 returning *;
 
 -- name: GetUserByEmail :one
-select id from users where email = $1;
+select * from users where email = $1;
 
 -- name: GetUserByName :one
-select id from users where name = $1;
+select * from users where name = $1;
