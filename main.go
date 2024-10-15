@@ -30,15 +30,17 @@ func main() {
 	apiCfg := apiConfig{
 		DB: dbQuries,
 	}
+
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("GET /api/err", handlerError)
+
+	mux.HandleFunc("POST /api/users", apiCfg.handlerUserCreate)
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
 	}
-
-	mux.HandleFunc("GET /api/healthz", handlerReadiness)
-	mux.HandleFunc("GET /api/err", handlerError)
 
 	fmt.Printf("Listening on port: %s...\n", port)
 	log.Fatal(srv.ListenAndServe())
