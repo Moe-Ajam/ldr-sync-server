@@ -1,2 +1,4 @@
 .env
 out
+goserver
+video-sync-server

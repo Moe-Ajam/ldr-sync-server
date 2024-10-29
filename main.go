@@ -19,7 +19,8 @@ type apiConfig struct {
 
 func main() {
 	godotenv.Load()
-	port := os.Getenv("PORT")
+	// port := os.Getenv("PORT")
+	port := "8080"
 	dbURL := os.Getenv("CONN")
 	secret := os.Getenv("JWT_SECRET")
 
@@ -41,6 +42,7 @@ func main() {
 
 	mux.HandleFunc("POST /api/register", apiCfg.handlerUserCreate)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerUserLogin)
+	// mux.HandleFunc("GET /", handlerTemp)
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
@@ -49,3 +51,16 @@ func main() {
 	fmt.Printf("Listening on port: %s...\n", port)
 	log.Fatal(srv.ListenAndServe())
 }
+
+// func handlerTemp(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "text/html")
+// 	w.WriteHeader(200)
+// 	const page = `<html>
+// <head></head>
+// <body>
+// 	<p> Hello from Docker! I'm a Go server. </p>
+// </body>
+// </html>
+// `
+// 	w.Write([]byte(page))
+// }
