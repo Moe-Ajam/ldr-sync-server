@@ -19,6 +19,12 @@ type LoginResponse struct {
 	Token string    `json:"token"`
 }
 
+type Claims struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	jwt.RegisteredClaims
+}
+
 func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    string `json:"email"`
@@ -48,22 +54,28 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims := jwt.MapClaims{
-		"user_id": user.ID,
-		"email":   user.Email,
-		"exp":     time.Now().Add(time.Hour * 24 * 100).Unix(),
-		"iss":     time.Now().Unix(),
+	expirationTime := time.Now().Add(5 * time.Minute)
+	claims := &Claims{
+		Username: user.Name,
+		Email:    user.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
 	}
-
-	// JWT token generation
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
 	tokenString, err := token.SignedString([]byte(cfg.jwtSecret))
 	if err != nil {
 		fmt.Printf("there was a problem signing the token: %v\n", err)
 		respondWithError(w, http.StatusInternalServerError, "something went wrong, could not create user")
 		return
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   tokenString,
+		Expires: expirationTime,
+	})
+
 	response := LoginResponse{
 		Id:    user.ID,
 		Name:  user.Name,
