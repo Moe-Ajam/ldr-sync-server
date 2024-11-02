@@ -25,6 +25,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// TODO: Make the token creation into its own function in an auth package
 func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    string `json:"email"`
