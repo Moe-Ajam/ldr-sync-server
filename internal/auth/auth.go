@@ -1,24 +1,29 @@
 package auth
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
-	"github.com/Moe-Ajam/ldr-sync-server/internal/helpers"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-func VerifyToken(w http.ResponseWriter, r *http.Request) (string, error) {
+func GetClaims(w http.ResponseWriter, r *http.Request, claims jwt.Claims, jwtSecret string) error {
 	c, err := r.Cookie("token")
 	if err != nil {
-		if err == http.ErrNoCookie {
-			helpers.RespondWithError(w, http.StatusUnauthorized, "No cookie present")
-			return "", err
-		}
-		fmt.Printf("Something went wrong while hanlding the request: %v\n", err)
-		helpers.RespondWithError(w, http.StatusBadRequest, "Something went wrong")
-		return "", err
+		return err
 	}
 
 	tknString := c.Value
-	return tknString, nil
+
+	token, err := jwt.ParseWithClaims(tknString, claims, func(token *jwt.Token) (any, error) {
+		return []byte(jwtSecret), nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if !token.Valid {
+		return errors.New("Token is invalid")
+	}
+	return nil
 }
