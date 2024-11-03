@@ -1,7 +1,11 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/Moe-Ajam/ldr-sync-server/internal/helpers"
+)
 
 func handlerError(w http.ResponseWriter, _ *http.Request) {
-	respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+	helpers.RespondWithError(w, http.StatusInternalServerError, "Internal Server Error")
 }

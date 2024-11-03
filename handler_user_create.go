@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Moe-Ajam/ldr-sync-server/internal/database"
+	"github.com/Moe-Ajam/ldr-sync-server/internal/helpers"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,27 +32,27 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 	err := decoder.Decode(&params)
 	if err != nil {
 		fmt.Println(err)
-		respondWithError(w, 500, "something went wrong while creating a user")
+		helpers.RespondWithError(w, 500, "something went wrong while creating a user")
 		return
 	}
 
 	retrievedUser, err := cfg.DB.GetUserByEmail(context.Background(), params.Email)
 	if err == nil {
 		fmt.Printf("email already exists and has the id: %s\n", retrievedUser.ID)
-		respondWithError(w, http.StatusConflict, "email already exists")
+		helpers.RespondWithError(w, http.StatusConflict, "email already exists")
 		return
 	}
 	retrievedUser, err = cfg.DB.GetUserByName(context.Background(), params.Username)
 	if err == nil {
 		fmt.Printf("name already exists and has the id: %s\n", retrievedUser.ID)
-		respondWithError(w, http.StatusConflict, "name already exists")
+		helpers.RespondWithError(w, http.StatusConflict, "name already exists")
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 	if err != nil {
 		fmt.Println(err)
-		respondWithError(w, 500, "something went wrong while creating a user")
+		helpers.RespondWithError(w, 500, "something went wrong while creating a user")
 		return
 	}
 
@@ -71,5 +72,5 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 		CreatedAt: user.CreatedAt,
 	}
 
-	respondWithJSON(w, http.StatusCreated, response)
+	helpers.RespondWithJSON(w, http.StatusCreated, response)
 }

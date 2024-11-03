@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Moe-Ajam/ldr-sync-server/internal/helpers"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -12,11 +13,11 @@ func (cfg *apiConfig) handleWelcome(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			respondWithError(w, http.StatusUnauthorized, "No cookie present")
+			helpers.RespondWithError(w, http.StatusUnauthorized, "No cookie present")
 			return
 		}
 		fmt.Printf("Something went wrong while hanlding the request: %v\n", err)
-		respondWithError(w, http.StatusBadRequest, "Something went wrong")
+		helpers.RespondWithError(w, http.StatusBadRequest, "Something went wrong")
 		return
 	}
 
@@ -29,16 +30,16 @@ func (cfg *apiConfig) handleWelcome(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			fmt.Println(tknString)
-			respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			helpers.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 		fmt.Printf("Something went wrong: %v\n", err)
-		respondWithError(w, http.StatusInternalServerError, "Something went wrong")
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
 	if !token.Valid {
-		respondWithError(w, http.StatusUnauthorized, "Inavalid Token")
+		helpers.RespondWithError(w, http.StatusUnauthorized, "Inavalid Token")
 		return
 	}
 
