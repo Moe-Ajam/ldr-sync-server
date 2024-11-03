@@ -9,7 +9,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// TODO: Make the token validation into a function in the auth package
 func (cfg *apiConfig) handleWelcome(w http.ResponseWriter, r *http.Request) {
 	claims := &Claims{}
 	err := auth.GetClaims(w, r, claims, cfg.jwtSecret)

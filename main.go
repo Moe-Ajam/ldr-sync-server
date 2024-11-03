@@ -44,6 +44,8 @@ func main() {
 	mux.HandleFunc("POST /api/login", apiCfg.handlerUserLogin)
 	mux.HandleFunc("GET /api/welcome", apiCfg.handleWelcome)
 
+	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
+
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
