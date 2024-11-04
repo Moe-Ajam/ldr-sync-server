@@ -64,6 +64,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 
+	go handleMessage()
+
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,

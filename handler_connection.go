@@ -30,3 +30,19 @@ func (cfg *apiConfig) handleConnection(w http.ResponseWriter, r *http.Request) {
 		broadcast <- msg
 	}
 }
+
+func handleMessage() {
+	for {
+		msg := <-broadcast
+
+		for client := range clients {
+			err := client.WriteJSON(msg)
+			if err != nil {
+				fmt.Println(err)
+				client.Close()
+				delete(clients, client)
+			}
+
+		}
+	}
+}
