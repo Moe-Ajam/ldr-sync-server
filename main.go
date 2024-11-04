@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/Moe-Ajam/ldr-sync-server/internal/database"
+	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -16,6 +17,22 @@ type apiConfig struct {
 	DB        *database.Queries
 	jwtSecret string
 }
+
+type Message struct {
+	Username string `json:"username"`
+	Message  string `json:"message"`
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+var (
+	clients   = make(map[*websocket.Conn]bool)
+	broadcast = make(chan Message)
+)
 
 func main() {
 	godotenv.Load()
@@ -43,6 +60,7 @@ func main() {
 	mux.HandleFunc("POST /api/register", apiCfg.handlerUserCreate)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerUserLogin)
 	mux.HandleFunc("GET /api/welcome", apiCfg.handleWelcome)
+	mux.HandleFunc("/api/ws", apiCfg.handleConnection)
 
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 
