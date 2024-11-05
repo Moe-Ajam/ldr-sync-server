@@ -64,6 +64,9 @@ func main() {
 
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 
+	mux.HandleFunc("POST /api/create-session", apiCfg.handlerCreateSession)
+	mux.HandleFunc("POST /api/join-session", apiCfg.handlerJoinSession)
+
 	go handleMessage()
 
 	srv := &http.Server{
