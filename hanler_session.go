@@ -11,8 +11,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type Session struct {
+	Users map[string]float64
+}
+
 // maps the session ID to usernames
-var sessions = make(map[string][]string)
+var sessions = make(map[string]*Session)
 
 type SessionCreationResponse struct {
 	Username  string `json:"username"`
@@ -38,8 +42,11 @@ func (cfg apiConfig) handlerCreateSession(w http.ResponseWriter, r *http.Request
 
 	sessionID := uuid.New().String()
 	fmt.Printf("Session ID created for the user %s: %s\n", claims.Username, sessionID)
-	sessions[sessionID] = []string{}
-	sessions[sessionID] = append(sessions[sessionID], claims.Username)
+	sessions[sessionID] = &Session{
+		Users: make(map[string]float64),
+	}
+	fmt.Printf("claim username: %s\n", claims.Username)
+	sessions[sessionID].Users[claims.Username] = 0.00
 	sessionCreationResponse := SessionCreationResponse{
 		Username:  claims.Username,
 		SessionID: sessionID,
@@ -49,12 +56,14 @@ func (cfg apiConfig) handlerCreateSession(w http.ResponseWriter, r *http.Request
 }
 
 type JoinSessionParams struct {
-	SessionID string `json:"session_id"`
+	RequestUser string `json:"request_user"`
+	SessionID   string `json:"session_id"`
 }
 
 type SessionJoinResponse struct {
 	ConnectedUser string `json:"connected_user"`
 	SessionID     string `json:"session_id"`
+	Message       string `json:"message"`
 }
 
 func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) {
@@ -83,16 +92,19 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	session, ok := sessions[joinSessionParams.SessionID]
+	_, ok := sessions[joinSessionParams.SessionID]
 	if !ok {
 		helpers.RespondWithError(w, http.StatusNotFound, "SessionID is invalid")
 		return
 	}
 
-	sessions[joinSessionParams.SessionID] = append(sessions[joinSessionParams.SessionID], claims.Username)
+	sessions[joinSessionParams.SessionID].Users[claims.Username] = 0.00
+
 	sessionJoinResponse := SessionJoinResponse{
-		ConnectedUser: session[0],
+		ConnectedUser: joinSessionParams.RequestUser,
 		SessionID:     joinSessionParams.SessionID,
+		Message:       claims.Username + " is now connected to " + joinSessionParams.RequestUser,
 	}
+
 	helpers.RespondWithJSON(w, http.StatusCreated, &sessionJoinResponse)
 }
