@@ -14,16 +14,7 @@ func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
 	claims := &Claims{}
 	err := auth.GetClaims(w, r, claims, cfg.jwtSecret)
 	if err != nil {
-		if err == http.ErrNoCookie {
-			helpers.RespondWithError(w, http.StatusUnauthorized, "No cookie present")
-			return
-		}
-		if err == jwt.ErrSignatureInvalid {
-			helpers.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
-			return
-		}
-		helpers.RespondWithError(w, http.StatusUnauthorized, "Token is invalid")
-		fmt.Println("Something went wrong!!", err)
+		fmt.Println(err)
 		return
 	}
 
