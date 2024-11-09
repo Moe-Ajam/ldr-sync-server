@@ -59,14 +59,12 @@ func main() {
 
 	mux.HandleFunc("POST /api/register", apiCfg.handlerUserCreate)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerUserLogin)
-	mux.HandleFunc("/api/ws", apiCfg.handleConnection)
 
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 
 	mux.HandleFunc("POST /api/create-session", apiCfg.handlerCreateSession)
 	mux.HandleFunc("POST /api/join-session", apiCfg.handlerJoinSession)
-
-	go handleMessage()
+	mux.HandleFunc("/api/ws", apiCfg.handlerWebSocket)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
