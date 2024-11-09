@@ -35,7 +35,8 @@ func (cfg apiConfig) handlerCreateSession(w http.ResponseWriter, r *http.Request
 	claims := Claims{}
 	err := auth.GetClaims(w, r, &claims, cfg.jwtSecret)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Could not retrieve claims: %v\n", err)
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
@@ -70,7 +71,8 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 	claims := Claims{}
 	err := auth.GetClaims(w, r, &claims, cfg.jwtSecret)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Could not retrieve claims: %v\n", err)
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
 
@@ -101,10 +103,16 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 }
 
 func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
+	claims := Claims{}
+	err := auth.GetClaims(w, r, &claims, cfg.jwtSecret)
+	if err != nil {
+		log.Printf("Could not retrieve claims: %v\n", err)
+		helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
+		return
+	}
 	sessionID := r.URL.Query().Get("session_id")
-	userID := r.URL.Query().Get("user_id")
 
-	log.Printf("The session ID is: %s and the user is: %s\n", sessionID, userID)
+	log.Printf("The session ID is: %s and the user is: %s\n", sessionID, claims.Username)
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -122,13 +130,13 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session.Users[userID] = conn
-	session.PlaybackTime[userID] = 0.0
+	session.Users[claims.Username] = conn
+	session.PlaybackTime[claims.Email] = 0.0
 
 	defer func() {
 		conn.Close()
-		delete(session.Users, userID)
-		delete(session.PlaybackTime, userID)
+		delete(session.Users, claims.Username)
+		delete(session.PlaybackTime, claims.Username)
 	}()
 
 	for {
@@ -139,7 +147,7 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		broadcastToSession(sessionID, msg, userID)
+		broadcastToSession(sessionID, msg, claims.Username)
 	}
 }
 
