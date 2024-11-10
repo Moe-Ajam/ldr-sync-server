@@ -57,7 +57,7 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("GET /api/err", handlerError)
 
-	mux.HandleFunc("POST /api/register", apiCfg.handlerUserCreate)
+	mux.HandleFunc("/api/register", apiCfg.handlerUserCreate)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerUserLogin)
 
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
