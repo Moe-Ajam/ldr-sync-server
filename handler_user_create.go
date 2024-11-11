@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -24,7 +23,6 @@ type registerResponse struct {
 func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) {
 	enableCORS(&w)
 	if r.Method == http.MethodOptions {
-		log.Println("Preflight blocked")
 		w.WriteHeader(http.StatusOK)
 		return
 	}
