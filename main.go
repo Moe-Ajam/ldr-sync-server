@@ -65,7 +65,7 @@ func main() {
 	mux.HandleFunc("POST /api/create-session", apiCfg.handlerCreateSession)
 	mux.HandleFunc("POST /api/join-session", apiCfg.handlerJoinSession)
 	mux.HandleFunc("/api/ws", apiCfg.handlerWebSocket)
-	mux.HandleFunc("/api/validateToken", apiCfg.hanlderValidateToken)
+	mux.HandleFunc("/api/validate-token", apiCfg.hanlderValidateToken)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
