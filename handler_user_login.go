@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -29,12 +28,11 @@ type Claims struct {
 
 // TODO: Make the token creation into its own function in an auth package
 func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
-	enableCORS(&w)
-	if r.Method == http.MethodOptions {
-		log.Println("Preflight blocked")
-		w.WriteHeader(http.StatusOK)
-		return
-	}
+	enableCORS(&w, r)
+	// if r.Method == http.MethodOptions {
+	// 	w.WriteHeader(http.StatusOK)
+	// 	return
+	// }
 	type parameters struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -80,9 +78,10 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   tokenString,
-		Expires: expirationTime,
+		Name:     "token",
+		Value:    tokenString,
+		Expires:  expirationTime,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	response := LoginResponse{

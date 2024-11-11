@@ -21,11 +21,7 @@ type registerResponse struct {
 }
 
 func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) {
-	enableCORS(&w)
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
+	enableCORS(&w, r)
 	type parameters struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
