@@ -54,16 +54,16 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /api/healthz", handlerReadiness)
-	mux.HandleFunc("GET /api/err", handlerError)
+	mux.HandleFunc("/api/healthz", handlerReadiness)
+	mux.HandleFunc("/api/err", handlerError)
 
 	mux.HandleFunc("/api/register", apiCfg.handlerUserCreate)
 	mux.HandleFunc("/api/login", apiCfg.handlerUserLogin)
 
-	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
+	mux.HandleFunc("/api/refresh", apiCfg.handlerRefresh)
 
-	mux.HandleFunc("POST /api/create-session", apiCfg.handlerCreateSession)
-	mux.HandleFunc("POST /api/join-session", apiCfg.handlerJoinSession)
+	mux.HandleFunc("/api/create-session", apiCfg.handlerCreateSession)
+	mux.HandleFunc("/api/join-session", apiCfg.handlerJoinSession)
 	mux.HandleFunc("/api/ws", apiCfg.handlerWebSocket)
 	mux.HandleFunc("/api/validate-token", apiCfg.hanlderValidateToken)
 
