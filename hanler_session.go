@@ -32,6 +32,7 @@ type SessionCreationResponse struct {
 }
 
 func (cfg apiConfig) handlerCreateSession(w http.ResponseWriter, r *http.Request) {
+	enableCORS(&w, r)
 	claims := Claims{}
 	err := auth.GetClaims(w, r, &claims, cfg.jwtSecret)
 	if err != nil {
