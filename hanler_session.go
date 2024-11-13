@@ -58,14 +58,11 @@ func (cfg apiConfig) handlerCreateSession(w http.ResponseWriter, r *http.Request
 }
 
 type JoinSessionParams struct {
-	RequestUser string `json:"request_user"`
-	SessionID   string `json:"session_id"`
+	SessionID string `json:"session_id"`
 }
 
 type SessionJoinResponse struct {
-	ConnectedUser string `json:"connected_user"`
-	SessionID     string `json:"session_id"`
-	Message       string `json:"message"`
+	SessionID string `json:"session_id"`
 }
 
 func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) {
@@ -95,9 +92,7 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 	sessions[joinSessionParams.SessionID].PlaybackTime[claims.Username] = 0.00
 
 	sessionJoinResponse := SessionJoinResponse{
-		ConnectedUser: joinSessionParams.RequestUser,
-		SessionID:     joinSessionParams.SessionID,
-		Message:       claims.Username + " is now connected to " + joinSessionParams.RequestUser,
+		SessionID: joinSessionParams.SessionID,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusCreated, &sessionJoinResponse)
