@@ -12,13 +12,11 @@ import (
 )
 
 func enableCORS(w *http.ResponseWriter, r *http.Request) {
-	log.Println("Enabling CORS...")
 	(*w).Header().Set("Access-Control-Allow-Origin", "chrome-extension://mkjhflenhpjedegkhgnjlconogccecmp")
 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
 	if r.Method == http.MethodOptions {
-		log.Println("Skipping preflight...")
 		(*w).WriteHeader(http.StatusOK)
 		return
 	}
