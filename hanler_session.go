@@ -8,6 +8,7 @@ import (
 
 	"github.com/Moe-Ajam/ldr-sync-server/internal/auth"
 	"github.com/Moe-Ajam/ldr-sync-server/internal/helpers"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -47,7 +48,6 @@ func (cfg apiConfig) handlerCreateSession(w http.ResponseWriter, r *http.Request
 		Users:        make(map[string]*websocket.Conn),
 		PlaybackTime: make(map[string]float64),
 	}
-	fmt.Printf("claim username: %s\n", claims.Username)
 	sessions[sessionID].PlaybackTime[claims.Username] = 0.00
 	sessionCreationResponse := SessionCreationResponse{
 		Username:  claims.Username,
@@ -100,13 +100,27 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 
 func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	claims := Claims{}
-	err := auth.GetClaims(w, r, &claims, cfg.jwtSecret)
+
+	sessionID := r.URL.Query().Get("session_id")
+	tknString := r.URL.Query().Get("token")
+
+	log.Printf("The received token on WebSocket connection request: %s\n", tknString)
+
+	_, err := jwt.ParseWithClaims(tknString, &claims, func(token *jwt.Token) (any, error) {
+		return []byte(cfg.jwtSecret), nil
+	})
 	if err != nil {
-		log.Printf("Could not retrieve claims: %v\n", err)
-		helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
+		if err == http.ErrNoCookie {
+			helpers.RespondWithError(w, http.StatusUnauthorized, "No cookie present")
+			return
+		}
+		if err == jwt.ErrSignatureInvalid {
+			helpers.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+		helpers.RespondWithError(w, http.StatusUnauthorized, "Token is invalid")
 		return
 	}
-	sessionID := r.URL.Query().Get("session_id")
 
 	log.Printf("The session ID is: %s and the user is: %s\n", sessionID, claims.Username)
 
@@ -133,6 +147,10 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 		delete(session.Users, claims.Username)
 		delete(session.PlaybackTime, claims.Username)
+		if len(session.Users) == 0 {
+			delete(sessions, sessionID)
+			log.Printf("Session %s was delete because it was empty\n", sessionID)
+		}
 	}()
 
 	for {
@@ -143,6 +161,7 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		log.Printf("The current session state: %v\n", session.Users)
 		broadcastToSession(sessionID, msg, claims.Username)
 	}
 }
@@ -154,7 +173,9 @@ func broadcastToSession(sessionID string, msg WebSocketMessage, senderID string)
 	}
 
 	for userID, conn := range session.Users {
+		log.Printf("User %s captured\n", userID)
 		if userID != senderID {
+			log.Printf("Sending message from %s to %s and the message is %v\n", senderID, userID, msg)
 			if err := conn.WriteJSON(msg); err != nil {
 				log.Printf("Error sending WebSocket messgae to user %s: %v\n", userID, err)
 				conn.Close()

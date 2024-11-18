@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -41,6 +42,7 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
+	log.Printf("Login params: %v\n", params)
 	if err != nil {
 		fmt.Printf("something went wrong while decoding the params for the login: %v\n", err)
 		helpers.RespondWithError(w, 500, "something went wrong, could not login")
