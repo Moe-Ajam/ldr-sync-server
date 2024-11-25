@@ -10,7 +10,8 @@ import (
 	"github.com/Moe-Ajam/ldr-sync-server/internal/database"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
+	// _ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type apiConfig struct {
@@ -38,10 +39,10 @@ func main() {
 	godotenv.Load()
 	// port := os.Getenv("PORT")
 	port := "8080"
-	dbURL := os.Getenv("CONN")
+	// dbURL := os.Getenv("CONN")
 	secret := os.Getenv("JWT_SECRET")
 
-	db, err := sql.Open("postgres", dbURL)
+	db, err := sql.Open("sqlite3", "./users.db")
 	if err != nil {
 		log.Fatalf("could not load database: %v\n", err)
 	}

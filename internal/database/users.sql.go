@@ -8,18 +8,15 @@ package database
 import (
 	"context"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
 insert into users(id, created_at, updated_at, name, email, password)
-values ($1, $2, $3, $4, $5, $6)
-returning id, created_at, updated_at, name, email, password
+values (?, ?, ?, ?, ?, ?) returning id, created_at, updated_at, name, email, password
 `
 
 type CreateUserParams struct {
-	ID        uuid.UUID
+	ID        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string
@@ -49,7 +46,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-select id, created_at, updated_at, name, email, password from users where email = $1
+select id, created_at, updated_at, name, email, password from users where email = ?
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -67,7 +64,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserByName = `-- name: GetUserByName :one
-select id, created_at, updated_at, name, email, password from users where name = $1
+select id, created_at, updated_at, name, email, password from users where name = ?
 `
 
 func (q *Queries) GetUserByName(ctx context.Context, name string) (User, error) {

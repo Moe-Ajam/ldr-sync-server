@@ -14,7 +14,7 @@ import (
 )
 
 type registerResponse struct {
-	Id        uuid.UUID `json:"id"`
+	Id        string    `json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
@@ -58,7 +58,7 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 	}
 
 	user, err := cfg.DB.CreateUser(context.Background(), database.CreateUserParams{
-		ID:        uuid.New(),
+		ID:        uuid.New().String(),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 		Name:      params.Username,
