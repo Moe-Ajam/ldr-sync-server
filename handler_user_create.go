@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -30,10 +31,11 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
+	log.Printf("Recevied body: %v\n", r.Body)
 	err := decoder.Decode(&params)
 	if err != nil {
 		fmt.Println(err)
-		helpers.RespondWithError(w, 500, "something went wrong while creating a user")
+		helpers.RespondWithError(w, 500, "something went wrong decoding the params")
 		return
 	}
 
@@ -53,7 +55,7 @@ func (cfg *apiConfig) handlerUserCreate(w http.ResponseWriter, r *http.Request) 
 	hash, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 	if err != nil {
 		fmt.Println(err)
-		helpers.RespondWithError(w, 500, "something went wrong while creating a user")
+		helpers.RespondWithError(w, 500, "something went wrong while encrypting the password")
 		return
 	}
 
