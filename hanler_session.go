@@ -66,6 +66,7 @@ type SessionJoinResponse struct {
 }
 
 func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) {
+	enableCORS(&w, r)
 	claims := Claims{}
 	err := auth.GetClaims(w, r, &claims, cfg.jwtSecret)
 	if err != nil {
@@ -98,7 +99,9 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 	helpers.RespondWithJSON(w, http.StatusCreated, &sessionJoinResponse)
 }
 
+// TODO: check if the CORS enabling bugged the websocket
 func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
+	enableCORS(&w, r)
 	claims := Claims{}
 
 	sessionID := r.URL.Query().Get("session_id")
