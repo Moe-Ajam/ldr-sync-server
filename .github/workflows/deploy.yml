@@ -3,39 +3,49 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main # Trigger on changes to the main branch
+      - main # Trigger on push to main branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
+      # Step 1: Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Set up Go environment
-      - name: Set up Go
+      # Step 2: Set Up Go Environment
+      - name: Set Up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.23.3"
 
-      # Build the Go binary
-      - name: Build the Go Application
+      # Step 3: Verify Dependencies
+      - name: Install Dependencies
+        run: |
+          go mod tidy
+          go mod download
+
+      # Step 4: Debugging Step - List Files
+      - name: Debug - List Files
+        run: ls -R
+
+      # Step 5: Build the Go Application
+      - name: Build Application
         run: |
           go build -o app main.go
 
-      # Deploy to VPS using SSH
+      # Step 6: Deploy to VPS via SCP
       - name: Deploy to VPS
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.SERVER_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "app" # The binary to copy
-          target: "/root/app" # Destination on the VPS
+          source: "app"
+          target: "/root/app"
 
-      # Restart the Go server
+      # Step 7: Restart the Server
       - name: Restart Server
         uses: appleboy/ssh-action@v1.0.0
         with:
