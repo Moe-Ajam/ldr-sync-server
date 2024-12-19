@@ -1,56 +1,37 @@
 name: Deploy to VPS
 
-on:
-  push:
-    branches:
-      - main # Trigger on push to main branch
+runs-on: ubuntu-latest
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+# Steps represent a sequence of tasks that will be executed as part of the job
+steps:
+  # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+  - name: Checkout the repository
+    uses: actions/checkout@v2
 
-    steps:
-      # Step 1: Checkout Code
-      - name: Checkout Code
-        uses: actions/checkout@v3
+  - name: Set up Go 1.23.4
+    uses: actions/setup-go@v1
+    with:
+      go-version: 1.23.4
 
-      # Step 2: Set Up Go Environment
-      - name: Set Up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: "1.23.3"
+  - name: Build app
+    run: go build -o app main.go
 
-      # Step 3: Verify Dependencies
-      - name: Install Dependencies
-        run: |
-          go mod tidy
-          go mod download
+  - name: SCP to Ocean
+    uses: appleboy/scp-action@master
+    with:
+      host: ${{ secrets.SERVER_IP }}
+      username: root
+      key: ${{ secrets.SSH_PRIVATE_KEY }}
+      port: 8080
+      source: "app"
+      target: "dist"
 
-      # Step 4: Debugging Step - List Files
-      - name: Debug - List Files
-        run: ls -R
-
-      # Step 5: Build the Go Application
-      - name: Build Application
-        run: |
-          go build -o app main.go
-
-      # Step 6: Deploy to VPS via SCP
-      - name: Deploy to VPS
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "app"
-          target: "/root/app"
-
-      # Step 7: Restart the Server
-      - name: Restart Server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            sudo systemctl restart my-go-app
+  - name: Deploy and rebuild on server
+    uses: appleboy/ssh-action@master
+    with:
+      host: ${{ secrets.SERVER_IP }}
+      username: root
+      key: ${{ secrets.SSH_PRIVATE_KEY }}
+      port: 8080
+      script: systemctl restart goweb.service &&
+        systemctl status goweb
