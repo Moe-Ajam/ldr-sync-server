@@ -48,6 +48,7 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
           script: |
             sudo systemctl stop webserver
             rm -rf /var/www/webserver/*
-            scp webserver root@82.112.255.162:/var/www/webserver/
+            mv ./webserver /var/www/webserver/
             sudo systemctl start webserver
+          debug: true
         # This step connects to your server via SSH and deploys the binary.
