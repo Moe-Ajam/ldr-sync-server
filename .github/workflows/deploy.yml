@@ -30,9 +30,12 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "CONN=${{ secrets.CONN }}" >> .env
 
+      - name: Install dependencies
+        run: go mod tidy
+
       - name: Build the Project
         run: |
-          go build -o webserver main.go
+          go build -o webserver .
         # This compiles your Go project into a binary called 'webserver'.
 
       - name: Deploy to Server
