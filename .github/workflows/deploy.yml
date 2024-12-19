@@ -1,37 +1,40 @@
-name: Deploy to VPS
+name: Deploy to Server # The name of this workflow, shown in the Actions tab.
 
-runs-on: ubuntu-latest
+on:
+  push:
+    branches:
+      - main # Trigger the workflow only when changes are pushed to the main branch.
 
-# Steps represent a sequence of tasks that will be executed as part of the job
-steps:
-  # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-  - name: Checkout the repository
-    uses: actions/checkout@v2
+jobs: # Define one or more jobs (here, we have one: 'deploy').
+  deploy:
+    runs-on: ubuntu-latest # GitHub will use an Ubuntu VM to execute this job.
 
-  - name: Set up Go 1.23.4
-    uses: actions/setup-go@v1
-    with:
-      go-version: 1.23.4
+    steps: # Steps define the tasks for this job.
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        # This action checks out your repository code into the VM.
 
-  - name: Build app
-    run: go build -o app main.go
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.23.4"
+        # This sets up a Go environment on the VM, using the specified version.
 
-  - name: SCP to Ocean
-    uses: appleboy/scp-action@master
-    with:
-      host: ${{ secrets.SERVER_IP }}
-      username: root
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      port: 8080
-      source: "app"
-      target: "dist"
+      - name: Build the Project
+        run: |
+          go build -o webserver main.go
+        # This compiles your Go project into a binary called 'webserver'.
 
-  - name: Deploy and rebuild on server
-    uses: appleboy/ssh-action@master
-    with:
-      host: ${{ secrets.SERVER_IP }}
-      username: root
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      port: 8080
-      script: systemctl restart goweb.service &&
-        systemctl status goweb
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_IP }} # Your server's IP, stored as a GitHub secret.
+          username: root # The SSH username
+          key: ${{ secrets.SSH_PRIVATE_KEY }} # The private SSH key, stored as a GitHub secret.
+          port: 22 # Default SSH port.
+          script: |
+            sudo systemctl stop webserver
+            rm -rf /var/www/webserver/*
+            scp webserver user@your_server_ip:/var/www/webserver/
+            sudo systemctl start webserver
+        # This step connects to your server via SSH and deploys the binary.
