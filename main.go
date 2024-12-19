@@ -37,8 +37,8 @@ var (
 
 func main() {
 	godotenv.Load()
-	// port := os.Getenv("PORT")
-	port := "8080"
+	port := os.Getenv("PORT")
+	// port := "8080"
 	// dbURL := os.Getenv("CONN")
 	secret := os.Getenv("JWT_SECRET")
 
