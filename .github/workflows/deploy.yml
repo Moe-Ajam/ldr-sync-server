@@ -50,4 +50,6 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
             scp webserver root@${{ secrets.SERVER_IP }}:/var/www/webserver/
             sudo systemctl start webserver
           debug: true
-          args: -o StrictHostKeyChecking=no
+          fingerprint: "sha256"
+          use_insecure_cipher: true
+          debug: true
