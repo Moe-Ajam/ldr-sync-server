@@ -52,4 +52,3 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
           debug: true
           fingerprint: "sha256"
           use_insecure_cipher: true
-          debug: true
