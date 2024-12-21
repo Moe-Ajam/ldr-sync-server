@@ -36,21 +36,7 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
       - name: Build the Project
         run: |
           go build -o webserver .
-      # This compiles your Go project into a binary called 'webserver'.
-      # - name: Deploy to Server
-      #   uses: appleboy/ssh-action@v0.1.6
-      #   with:
-      #     host: ${{ secrets.SERVER_IP }} # Your server's IP, stored as a GitHub secret.
-      #     username: root # The SSH username
-      #     key: ${{ secrets.SSH_PRIVATE_KEY }} # The private SSH key, stored as a GitHub secret.
-      #     port: 22 # Default SSH port.
-      #     script: |
-      #       sudo systemctl stop webserver
-      #       rm -rf /var/www/webserver/*
-      #       mv ./webserver /var/www/webserver/
-      #       sudo systemctl start webserver
-      #     debug: true
-      #   # This step connects to your server via SSH and deploys the binary.
+
       - name: Deploy to Server
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -59,8 +45,9 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            sudo systemctl stop webserver
+            # sudo systemctl stop webserver
             rm -rf /var/www/webserver/*
             scp webserver root@${{ secrets.SERVER_IP }}:/var/www/webserver/
             sudo systemctl start webserver
           debug: true
+          args: -o StrictHostKeyChecking=no
