@@ -37,22 +37,34 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
         run: |
           go build -o webserver .
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v0.1.6
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            echo "Stopping webserver..."
-            sudo systemctl stop webserver
-            echo "Clearing old files..."
-            rm -rf /var/www/webserver/*
-            echo "Copying new files..."
-            scp -i ~/.ssh/id_rsa ./webserver root@${{ secrets.SERVER_IP }}:/var/www/webserver/
-            echo "Starting webserver..."
-            sudo systemctl start webserver
-          fingerprint: "sha256"
-          use_insecure_cipher: true
-          debug: true
+          known_hosts: unnecessary
+
+      - name: Adding know hosts
+        run: ssh-keyscan -p 22 -H ${{ secrets.SERVER_IP  }} >> ~/.ssh/known_hosts
+
+      - name: Copy binary
+        run: rsync -e "ssh -p 22 -P ./bin/linux_amd64/api root@${{secrets.SERVER_IP}}:~/var/www/webserver
+
+      # - name: Deploy to Server
+      #   uses: appleboy/ssh-action@v0.1.6
+      #   with:
+      #     host: ${{ secrets.SERVER_IP }}
+      #     username: root
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     port: 22
+      #     script: |
+      #       echo "Stopping webserver..."
+      #       sudo systemctl stop webserver
+      #       echo "Clearing old files..."
+      #       rm -rf /var/www/webserver/*
+      #       echo "Copying new files..."
+      #       scp -i ~/.ssh/id_rsa ./webserver root@${{ secrets.SERVER_IP }}:/var/www/webserver/
+      #       echo "Starting webserver..."
+      #       sudo systemctl start webserver
+      #     fingerprint: "sha256"
+      #     use_insecure_cipher: true
+      #     debug: true
