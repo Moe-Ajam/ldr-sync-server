@@ -44,10 +44,13 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          sync: true
+          source: ./webserver
+          target: /var/www/webserver/
           script: |
             # sudo systemctl stop webserver
-            rm -rf /var/www/webserver/*
-            scp webserver root@${{ secrets.SERVER_IP }}:/var/www/webserver/
+            # rm -rf /var/www/webserver/*
+            # scp webserver root@${{ secrets.SERVER_IP }}:/var/www/webserver/
             sudo systemctl start webserver
           debug: true
           fingerprint: "sha256"
