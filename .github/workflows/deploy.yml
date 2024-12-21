@@ -47,7 +47,7 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
         run: ssh-keyscan -p 22 -H ${{ secrets.SERVER_IP  }} >> ~/.ssh/known_hosts
 
       - name: Copy binary
-        run: rsync -e "ssh -p 22 -P" ./bin/linux_amd64/api root@${{secrets.SERVER_IP}}:/var/www/webserver
+        run: rsync -e "ssh -p 22 -P" ./webserver root@${{secrets.SERVER_IP}}:/var/www/webserver
 
       # - name: Deploy to Server
       #   uses: appleboy/ssh-action@v0.1.6
