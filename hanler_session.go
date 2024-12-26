@@ -107,8 +107,6 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("session_id")
 	tknString := r.URL.Query().Get("token")
 
-	log.Printf("The received token on WebSocket connection request: %s\n", tknString)
-
 	_, err := jwt.ParseWithClaims(tknString, &claims, func(token *jwt.Token) (any, error) {
 		return []byte(cfg.jwtSecret), nil
 	})
@@ -125,8 +123,6 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("The session ID is: %s and the user is: %s\n", sessionID, claims.Username)
-
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -136,7 +132,6 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, exists := sessions[sessionID]
-	log.Printf("Session is: %v, and it %v", session, exists)
 	if !exists {
 		helpers.RespondWithError(w, http.StatusNotFound, "Session doesn't exist")
 		conn.Close()
@@ -150,9 +145,10 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 		delete(session.Users, claims.Username)
 		delete(session.PlaybackTime, claims.Username)
+
+		// Deletes the session if no users are connected to it anymore
 		if len(session.Users) == 0 {
 			delete(sessions, sessionID)
-			log.Printf("Session %s was delete because it was empty\n", sessionID)
 		}
 	}()
 
@@ -164,7 +160,6 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		log.Printf("The current session state: %v\n", session.Users)
 		broadcastToSession(sessionID, msg, claims.Username)
 	}
 }
@@ -176,9 +171,7 @@ func broadcastToSession(sessionID string, msg WebSocketMessage, senderID string)
 	}
 
 	for userID, conn := range session.Users {
-		log.Printf("User %s captured\n", userID)
 		if userID != senderID {
-			log.Printf("Sending message from %s to %s and the message is %v\n", senderID, userID, msg)
 			if err := conn.WriteJSON(msg); err != nil {
 				log.Printf("Error sending WebSocket messgae to user %s: %v\n", userID, err)
 				conn.Close()
