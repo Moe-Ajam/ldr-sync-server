@@ -48,3 +48,26 @@ jobs: # Define one or more jobs (here, we have one: 'deploy').
 
       - name: Copy binary
         run: rsync -e "ssh -p 22" ./webserver root@${{ secrets.SERVER_IP }}:/var/www/webserver
+
+      - name: Copy migrations
+        run: rsync -e "ssh -p 22" -rP ./sql/schema root@${{ secrets.SERVER_IP }}:/var/www/webserver
+
+      - name: Create .env and restart the server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo $PWD
+
+            echo "PORT=${{ secrets.PORT }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "CONN=${{ secrets.CONN }}" >> .env
+
+            goose -dir /var/www/webserver/schema sqlite3 ./users.db up
+
+            # sudo mv ~/api.service /etc/systemd/system
+            # sudo systemctl enable api 
+            # sudo systemctl restart api
