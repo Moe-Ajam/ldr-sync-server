@@ -69,7 +69,7 @@ func main() {
 	mux.HandleFunc("/api/validate-token", apiCfg.hanlderValidateToken)
 
 	srv := &http.Server{
-		Addr:    ":" + port,
+		Addr:    "0.0.0.0:" + port,
 		Handler: mux,
 	}
 

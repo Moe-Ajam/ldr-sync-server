@@ -99,7 +99,6 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 	helpers.RespondWithJSON(w, http.StatusCreated, &sessionJoinResponse)
 }
 
-// TODO: check if the CORS enabling bugged the websocket
 func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	enableCORS(&w, r)
 	claims := Claims{}
@@ -173,7 +172,7 @@ func broadcastToSession(sessionID string, msg WebSocketMessage, senderID string)
 	for userID, conn := range session.Users {
 		if userID != senderID {
 			if err := conn.WriteJSON(msg); err != nil {
-				log.Printf("Error sending WebSocket messgae to user %s: %v\n", userID, err)
+				log.Printf("Error sending WebSocket message to user %s: %v\n", userID, err)
 				conn.Close()
 				delete(session.Users, userID)
 			}
