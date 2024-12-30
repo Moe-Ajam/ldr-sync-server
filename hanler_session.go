@@ -113,18 +113,18 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
-			helpers.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			// helpers.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 			log.Println("Unauthorized")
 			return
 		}
-		helpers.RespondWithError(w, http.StatusUnauthorized, "Token is invalid")
+		// helpers.RespondWithError(w, http.StatusUnauthorized, "Token is invalid")
 		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("Something went wrong while upgrading the connection: %v\n", err)
-		helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
+		// helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
 		conn.Close()
 		return
 	}
@@ -132,7 +132,7 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	session, exists := sessions[sessionID]
 	if !exists {
-		helpers.RespondWithError(w, http.StatusNotFound, "Session doesn't exist")
+		// helpers.RespondWithError(w, http.StatusNotFound, "Session doesn't exist")
 		conn.Close()
 		return
 	}
