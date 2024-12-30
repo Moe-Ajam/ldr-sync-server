@@ -100,22 +100,21 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 }
 
 func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
+	log.Println("Attempting to connect to socket...")
 	enableCORS(&w, r)
 	claims := Claims{}
 
 	sessionID := r.URL.Query().Get("session_id")
 	tknString := r.URL.Query().Get("token")
+	log.Printf("Connecting to web socket with session ID: %s, and the token recieved is: %s\n", sessionID, tknString)
 
 	_, err := jwt.ParseWithClaims(tknString, &claims, func(token *jwt.Token) (any, error) {
 		return []byte(cfg.jwtSecret), nil
 	})
 	if err != nil {
-		if err == http.ErrNoCookie {
-			helpers.RespondWithError(w, http.StatusUnauthorized, "No cookie present")
-			return
-		}
 		if err == jwt.ErrSignatureInvalid {
 			helpers.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			log.Println("Unauthorized")
 			return
 		}
 		helpers.RespondWithError(w, http.StatusUnauthorized, "Token is invalid")
@@ -124,11 +123,12 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Something went wrong while upgrading the connection: %v\n", err)
 		helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
 		conn.Close()
 		return
 	}
+	log.Println("Connection upgraded successfully!")
 
 	session, exists := sessions[sessionID]
 	if !exists {
