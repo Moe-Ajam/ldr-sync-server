@@ -12,8 +12,15 @@ import (
 )
 
 func enableCORS(w *http.ResponseWriter, r *http.Request) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "chrome-extension://migncpjniacleljjjfdmkhpdomdkhjhn")
-	(*w).Header().Set("Access-Control-Allow-Origin", "chrome-extension://mkjhflenhpjedegkhgnjlconogccecmp")
+	// (*w).Header().Set("Access-Control-Allow-Origin", "chrome-extension://migncpjniacleljjjfdmkhpdomdkhjhn")
+	// (*w).Header().Set("Access-Control-Allow-Origin", "chrome-extension://mkjhflenhpjedegkhgnjlconogccecmp")
+
+	// Allow CORS based on which origin the request came from
+	origin := r.Header.Get("Origin")
+	if origin == "chrome-extension://migncpjniacleljjjfdmkhpdomdkhjhn" ||
+		origin == "chrome-extension://mkjhflenhpjedegkhgnjlconogccecmp" {
+		(*w).Header().Set("Access-Control-Allow-Origin", origin)
+	}
 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
