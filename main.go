@@ -72,7 +72,8 @@ func main() {
 		Addr:    "0.0.0.0:" + port,
 		Handler: mux,
 	}
-
+	log.Println("Starting server on https://srv629650.hstgr.cloud...")
 	fmt.Printf("Listening on port: %s...\n", port)
-	log.Fatal(srv.ListenAndServe())
+	log.Fatal(srv.ListenAndServeTLS("/etc/letsencrypt/live/srv629650.hstgr.cloud/fullchain.pem", "/etc/letsencrypt/live/srv629650.hstgr.cloud/privkey.pem"))
+	// log.Fatal(srv.ListenAndServe())
 }
