@@ -72,8 +72,8 @@ func main() {
 		Addr:    "0.0.0.0:" + port,
 		Handler: mux,
 	}
-	log.Println("Starting server on https://api.moecodes.com...")
+	// log.Println("Starting server on https://api.moecodes.com...")
 	fmt.Printf("Listening on port: %s...\n", port)
-	log.Fatal(srv.ListenAndServeTLS("/etc/letsencrypt/live/api.moecodes.com/fullchain.pem", "/etc/letsencrypt/live/api.moecodes.com/privkey.pem"))
-	// log.Fatal(srv.ListenAndServe())
+	// log.Fatal(srv.ListenAndServeTLS("/etc/letsencrypt/live/api.moecodes.com/fullchain.pem", "/etc/letsencrypt/live/api.moecodes.com/privkey.pem"))
+	log.Fatal(srv.ListenAndServe())
 }
