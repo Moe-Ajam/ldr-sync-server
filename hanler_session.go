@@ -104,14 +104,12 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 }
 
 func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
-	log.Println("Attempting to connect to socket...")
 	enableCORS(&w, r)
 	claims := Claims{}
 
 	// Extract session ID and token from the query parameters
 	sessionID := r.URL.Query().Get("session_id")
 	tknString := r.URL.Query().Get("token")
-	log.Printf("Connecting to web socket with session ID: %s, and the token received is: %s\n", sessionID, tknString)
 
 	// Parse the JWT token
 	_, err := jwt.ParseWithClaims(tknString, &claims, func(token *jwt.Token) (any, error) {
@@ -135,7 +133,6 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 		return
 	}
-	log.Println("Connection upgraded successfully!")
 
 	// Retrieve the session
 	session, exists := sessions[sessionID]
@@ -170,7 +167,6 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		log.Printf("Message received from %s: %v\n", claims.Username, msg)
 		broadcastToSession(sessionID, msg, claims.Username)
 	}
 }
@@ -184,7 +180,6 @@ func broadcastToSession(sessionID string, msg WebSocketMessage, senderID string)
 
 	for userID, conn := range session.Users {
 		if userID != senderID {
-			log.Printf("Sending message from %s to %s: %v\n", senderID, userID, msg)
 			if err := conn.WriteJSON(msg); err != nil {
 				log.Printf("Error sending WebSocket message to user %s: %v\n", userID, err)
 				conn.Close()
