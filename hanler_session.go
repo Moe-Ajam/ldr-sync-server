@@ -24,11 +24,19 @@ type WebSocketMessage struct {
 	UserID      string  `json:"user_id"`
 }
 
-// maps the session ID to usernames
+// Maps session IDs to session data
 var sessions = make(map[string]*Session)
 
 type SessionCreationResponse struct {
 	Username  string `json:"username"`
+	SessionID string `json:"session_id"`
+}
+
+type JoinSessionParams struct {
+	SessionID string `json:"session_id"`
+}
+
+type SessionJoinResponse struct {
 	SessionID string `json:"session_id"`
 }
 
@@ -42,6 +50,7 @@ func (cfg apiConfig) handlerCreateSession(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Create a new session with a unique ID
 	sessionID := uuid.New().String()
 	fmt.Printf("Session ID created for the user %s: %s\n", claims.Username, sessionID)
 	sessions[sessionID] = &Session{
@@ -49,20 +58,13 @@ func (cfg apiConfig) handlerCreateSession(w http.ResponseWriter, r *http.Request
 		PlaybackTime: make(map[string]float64),
 	}
 	sessions[sessionID].PlaybackTime[claims.Username] = 0.00
+
 	sessionCreationResponse := SessionCreationResponse{
 		Username:  claims.Username,
 		SessionID: sessionID,
 	}
 
 	helpers.RespondWithJSON(w, http.StatusCreated, &sessionCreationResponse)
-}
-
-type JoinSessionParams struct {
-	SessionID string `json:"session_id"`
-}
-
-type SessionJoinResponse struct {
-	SessionID string `json:"session_id"`
 }
 
 func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) {
@@ -84,13 +86,15 @@ func (cfg apiConfig) handlerJoinSession(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	_, ok := sessions[joinSessionParams.SessionID]
+	// Check if the session exists
+	session, ok := sessions[joinSessionParams.SessionID]
 	if !ok {
 		helpers.RespondWithError(w, http.StatusNotFound, "SessionID is invalid")
 		return
 	}
 
-	sessions[joinSessionParams.SessionID].PlaybackTime[claims.Username] = 0.00
+	// Add the user to the session's playback map
+	session.PlaybackTime[claims.Username] = 0.00
 
 	sessionJoinResponse := SessionJoinResponse{
 		SessionID: joinSessionParams.SessionID,
@@ -104,53 +108,60 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	enableCORS(&w, r)
 	claims := Claims{}
 
+	// Extract session ID and token from the query parameters
 	sessionID := r.URL.Query().Get("session_id")
 	tknString := r.URL.Query().Get("token")
-	log.Printf("Connecting to web socket with session ID: %s, and the token recieved is: %s\n", sessionID, tknString)
+	log.Printf("Connecting to web socket with session ID: %s, and the token received is: %s\n", sessionID, tknString)
 
+	// Parse the JWT token
 	_, err := jwt.ParseWithClaims(tknString, &claims, func(token *jwt.Token) (any, error) {
 		return []byte(cfg.jwtSecret), nil
 	})
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
-			// helpers.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
-			log.Println("Unauthorized")
+			log.Println("Unauthorized - Invalid token signature")
+			http.Error(w, "Unauthorized - Invalid token", http.StatusUnauthorized)
 			return
 		}
-		// helpers.RespondWithError(w, http.StatusUnauthorized, "Token is invalid")
+		log.Println("Unauthorized - Token parsing error")
+		http.Error(w, "Unauthorized - Token parsing error", http.StatusUnauthorized)
 		return
 	}
 
+	// Upgrade the connection to WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("Something went wrong while upgrading the connection: %v\n", err)
-		// helpers.RespondWithError(w, http.StatusInternalServerError, "Something went wrong")
 		conn.Close()
 		return
 	}
 	log.Println("Connection upgraded successfully!")
 
+	// Retrieve the session
 	session, exists := sessions[sessionID]
 	if !exists {
-		// helpers.RespondWithError(w, http.StatusNotFound, "Session doesn't exist")
+		log.Println("Session does not exist")
 		conn.Close()
 		return
 	}
 
+	// Add the user's connection to the session
 	session.Users[claims.Username] = conn
-	session.PlaybackTime[claims.Email] = 0.0
+	session.PlaybackTime[claims.Username] = 0.0
 
+	// Ensure cleanup on disconnect
 	defer func() {
 		conn.Close()
 		delete(session.Users, claims.Username)
 		delete(session.PlaybackTime, claims.Username)
 
-		// Deletes the session if no users are connected to it anymore
+		// Delete the session if no users are connected
 		if len(session.Users) == 0 {
 			delete(sessions, sessionID)
 		}
 	}()
 
+	// Listen for messages from the client
 	for {
 		var msg WebSocketMessage
 		err := conn.ReadJSON(&msg)
@@ -159,6 +170,7 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		log.Printf("Message received from %s: %v\n", claims.Username, msg)
 		broadcastToSession(sessionID, msg, claims.Username)
 	}
 }
@@ -166,11 +178,13 @@ func (cfg *apiConfig) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 func broadcastToSession(sessionID string, msg WebSocketMessage, senderID string) {
 	session, exists := sessions[sessionID]
 	if !exists {
+		log.Printf("Session %s does not exist\n", sessionID)
 		return
 	}
 
 	for userID, conn := range session.Users {
 		if userID != senderID {
+			log.Printf("Sending message from %s to %s: %v\n", senderID, userID, msg)
 			if err := conn.WriteJSON(msg); err != nil {
 				log.Printf("Error sending WebSocket message to user %s: %v\n", userID, err)
 				conn.Close()
